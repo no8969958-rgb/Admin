@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ইসলাম বাংলা - অ্যাডমিন কন্ট্রোল প্যানেল</title>
+    <!-- App Logo Favicon -->
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/wNkrJ9tb/IMG-20261108-WA7302.jpg">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FIREBASE INITIALIZATION & FIRESTORE SETUP -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
+      import { 
+        getFirestore, 
+        doc, 
+        getDoc, 
+        setDoc, 
+        collection, 
+        onSnapshot, 
+        updateDoc, 
+        deleteDoc 
+      } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+      // আপনার ফায়ারবেস কনফিগারেশন
+      const firebaseConfig = {
+        apiKey: "AIzaSyCDdvOotHAj1LHPNXYj_OFK7sddC9PaqPk",
+        authDomain: "islam-bangla.firebaseapp.com",
+        projectId: "islam-bangla",
+        storageBucket: "islam-bangla.firebasestorage.app",
+        messagingSenderId: "804089398471",
+        appId: "1:804089398471:web:a46ac73dc3a6f5c7452ae2",
+        measurementId: "G-8V26FYY3FF"
+      };
+
+      // ইনিশিয়ালাইজেশন
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const db = getFirestore(app);
+
+      window.firebaseDB = db;
+      window.firestoreTools = { doc, getDoc, setDoc, collection, onSnapshot, updateDoc, deleteDoc };
+      
+      console.log("Firebase Admin System Initialized Successfully!");
+    </script>
+
+    <style>
+        * {
+            font-family: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bg-islamic-pattern {
+            background-color: #04140e;
+            background-image: radial-gradient(#10b981 0.75px, transparent 0.75px), radial-gradient(#d97706 0.75px, #04140e 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            background-attachment: fixed;
+        }
+
+        .royal-card {
+            background: linear-gradient(145deg, #09261c 0%, #051912 100%);
+            border: 1.5px solid #1c5e46;
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
+        }
+
+        .gold-border-glow {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #03100b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #f59e0b, #10b981);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body class="bg-islamic-pattern text-white min-h-screen flex flex-col antialiased selection:bg-amber-400 selection:text-slate-950 pb-20">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="royal-card px-4 py-3 rounded-2xl border-2 border-amber-400 shadow-2xl flex items-center gap-3 bg-[#07241a]/95 backdrop-blur-md">
+            <div id="toastIcon" class="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold">
+                <i data-lucide="check" class="w-4 h-4"></i>
+            </div>
+            <p id="toastMessage" class="text-xs sm:text-sm font-bold text-amber-200">সফলভাবে সংরক্ষিত হয়েছে!</p>
+        </div>
+    </div>
+
+    <!-- ================= 1. PASSWORD LOGIN SCREEN ================= -->
+    <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#03100b]/90 backdrop-blur-md">
+        <div class="royal-card w-full max-w-md p-6 sm:p-8 rounded-3xl border-2 border-amber-500/50 shadow-2xl text-center space-y-6">
+            <div class="relative w-20 h-20 mx-auto">
+                <img 
+                    src="https://i.ibb.co/wNkrJ9tb/IMG-20261108-WA7302.jpg" 
+                    alt="Logo" 
+                    class="w-full h-full rounded-2xl object-cover gold-border-glow shadow-xl"
+                />
+                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-400 text-slate-950 rounded-full flex items-center justify-center font-black text-xs shadow-md">
+                    <i data-lucide="lock" class="w-3 h-3"></i>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-black text-amber-300 tracking-tight">অ্যাডমিন লগইন</h2>
+                <p class="text-xs text-emerald-200 font-semibold mt-1">ইসলাম বাংলা কন্ট্রোল প্যানেলে প্রবেশ করুন</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="adminPasswordInput" 
+                        placeholder="পাসওয়ার্ড লিখুন..." 
+                        class="w-full py-3.5 pl-4 pr-11 bg-[#041610] rounded-2xl border-2 border-emerald-600/40 text-white placeholder-emerald-300/40 text-sm font-semibold focus:outline-none focus:border-amber-400 transition"
+                        onkeypress="if(event.key === 'Enter') handleLogin()"
+                    />
+                    <button type="button" onclick="togglePassVisibility()" class="absolute right-3.5 top-3.5 text-emerald-400 hover:text-amber-300">
+                        <i data-lucide="eye" id="passEyeIcon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <p id="loginError" class="text-xs text-rose-400 font-bold hidden flex items-center justify-center gap-1">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                    <span>ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিন।</span>
+                </p>
+
+                <button 
+                    onclick="handleLogin()" 
+                    class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-2xl transition shadow-lg flex items-center justify-center gap-2 text-sm"
+                >
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>ড্যাশবোর্ডে প্রবেশ করুন</span>
+                </button>
+            </div>
+
+            <div class="pt-2 border-t border-emerald-900/40 text-[11px] text-emerald-300/60 font-semibold">
+                গোপনীয় ইসলামিক ম্যানেজমেন্ট সিস্টেম • শুধুমাত্র অ্যাডমিন
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. MAIN ADMIN DASHBOARD ================= -->
+    <div id="adminDashboard" class="hidden flex-1 flex flex-col">
+        
+        <!-- TOP NAVBAR -->
+        <header class="sticky top-0 z-40 bg-[#061e16]/95 backdrop-blur-md border-b-2 border-amber-500/30 px-4 py-3 shadow-2xl">
+            <div class="max-w-5xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img 
+                        src="https://i.ibb.co/wNkrJ9tb/IMG-20261108-WA7302.jpg" 
+                        alt="Logo" 
+                        class="w-10 h-10 rounded-xl object-cover gold-border-glow shadow"
+                    />
+                    <div>
+                        <h1 class="text-lg font-black text-amber-300 leading-tight">অ্যাডমিন প্যানেল</h1>
+                        <p class="text-[11px] text-emerald-300 font-semibold">ইসলাম বাংলা কেন্দ্রীয় কন্ট্রোল</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="handleLogout()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-xs font-bold hover:bg-red-900 transition">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                        <span>লগআউট</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTAINER -->
+        <main class="max-w-5xl mx-auto w-full px-4 pt-5 space-y-6">
+            
+            <!-- STATS OVERVIEW CARDS -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="royal-card p-4 rounded-2xl border border-emerald-600/40 text-center">
+                    <span class="text-xs text-emerald-300 font-bold block mb-1">মোট প্রশ্ন</span>
+                    <span id="statTotalQ" class="text-2xl font-black text-amber-400">০</span>
+                </div>
+                <div class="royal-card p-4 rounded-2xl border border-emerald-600/40 text-center">
+                    <span class="text-xs text-emerald-300 font-bold block mb-1">উত্তর প্রক্রিয়াধীন</span>
+                    <span id="statPendingQ" class="text-2xl font-black text-rose-400">০</span>
+                </div>
+                <div class="royal-card p-4 rounded-2xl border border-emerald-600/40 text-center">
+                    <span class="text-xs text-emerald-300 font-bold block mb-1">উত্তর দেওয়া হয়েছে</span>
+                    <span id="statAnsweredQ" class="text-2xl font-black text-emerald-400">০</span>
+                </div>
+                <div class="royal-card p-4 rounded-2xl border border-emerald-600/40 text-center">
+                    <span class="text-xs text-emerald-300 font-bold block mb-1">সক্রিয় ফিচার</span>
+                    <span class="text-2xl font-black text-amber-300">৬টি</span>
+                </div>
+            </div>
+
+            <!-- NAVIGATION TABS -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <button onclick="switchTab('questions')" id="tabBtn-questions" class="px-4 py-2 rounded-xl font-black bg-amber-400 text-slate-950 shrink-0 transition">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5 inline mr-1"></i>
+                    প্রশ্নের উত্তর প্রদান
+                </button>
+                <button onclick="switchTab('dailyAdvice')" id="tabBtn-dailyAdvice" class="px-4 py-2 rounded-xl font-bold bg-[#07241a] text-emerald-200 border border-emerald-600/40 shrink-0 transition">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 inline mr-1"></i>
+                    দৈনিক উপদেশ পরিবর্তন
+                </button>
+                <button onclick="switchTab('buttons')" id="tabBtn-buttons" class="px-4 py-2 rounded-xl font-bold bg-[#07241a] text-emerald-200 border border-emerald-600/40 shrink-0 transition">
+                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 inline mr-1"></i>
+                    বাটনের নাম পরিবর্তন
+                </button>
+                <button onclick="switchTab('notice')" id="tabBtn-notice" class="px-4 py-2 rounded-xl font-bold bg-[#07241a] text-emerald-200 border border-emerald-600/40 shrink-0 transition">
+                    <i data-lucide="bell" class="w-3.5 h-3.5 inline mr-1"></i>
+                    নোটিশ কন্ট্রোল
+                </button>
+            </div>
+
+            <!-- ================= TAB 1: USER QUESTIONS ================= -->
+            <div id="section-questions" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-amber-300 flex items-center gap-2">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        ব্যবহারকারীদের প্রেরিত দ্বীনি জিজ্ঞাসা
+                    </h3>
+                    <button onclick="loadQuestionsData()" class="p-1.5 rounded-xl bg-[#041610] text-amber-300 hover:bg-[#07241a] border border-emerald-600/40 text-xs flex items-center gap-1 font-bold">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>রিফ্রেশ</span>
+                    </button>
+                </div>
+
+                <div id="questionsContainer" class="space-y-3.5">
+                    <!-- Dynamic Questions Loaded Here -->
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: DAILY ADVICE MANAGER ================= -->
+            <div id="section-dailyAdvice" class="hidden space-y-4">
+                <div class="royal-card p-5 rounded-3xl border border-amber-500/40 space-y-4">
+                    <div class="flex items-center gap-2 text-amber-300 font-black text-sm">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>অ্যাপের হোমপেজের "আজকের উপদেশ / হাদিস" পরিবর্তন করুন</span>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-emerald-200 font-bold block mb-1.5">উপদেশ / হাদিসের বাণী:</label>
+                        <textarea 
+                            id="adviceInputText" 
+                            rows="4" 
+                            placeholder="রাসূলুল্লাহ (সাঃ) বলেছেন: ..." 
+                            class="w-full p-3.5 bg-[#041610] rounded-2xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none"
+                        ></textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-emerald-200 font-bold block mb-1.5">গ্রন্থ ও রেফারেন্স (যেমন: সহীহ মুসলিম):</label>
+                        <input 
+                            type="text" 
+                            id="adviceInputRef" 
+                            placeholder="যেমন: [সহীহ মুসলিম, হাদিস নং ১]" 
+                            class="w-full p-3.5 bg-[#041610] rounded-2xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none"
+                        />
+                    </div>
+
+                    <button 
+                        onclick="saveDailyAdvice()" 
+                        class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-xl transition shadow text-sm flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>আজকের উপদেশ সেভ ও আপডেট করুন</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= TAB 3: BUTTONS CONFIG MANAGER ================= -->
+            <div id="section-buttons" class="hidden space-y-4">
+                <div class="royal-card p-5 rounded-3xl border border-amber-500/40 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-black text-amber-300 flex items-center gap-2">
+                            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                            হোমস্ক্রিনের ৬টি প্রধান বাটনের নাম পরিবর্তন করুন
+                        </span>
+                        <button onclick="resetDefaultButtonNames()" class="text-xs text-amber-300 underline font-bold">ডিফল্ট নামে রিসেট</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ১ (ডিফল্ট: কুরআন)</label>
+                            <input type="text" id="btnName_quran" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ২ (ডিফল্ট: হাদিস)</label>
+                            <input type="text" id="btnName_hadith" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ৩ (ডিফল্ট: দোয়া)</label>
+                            <input type="text" id="btnName_dua" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ৪ (ডিফল্ট: আমল ট্র্যাকার)</label>
+                            <input type="text" id="btnName_amal" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ৫ (ডিফল্ট: দ্বীনি জিজ্ঞাসা)</label>
+                            <input type="text" id="btnName_jiggasa" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-emerald-200 font-bold block mb-1">বাটন ৬ (ডিফল্ট: যাকাত ক্যালকুলেটর)</label>
+                            <input type="text" id="btnName_zakat" class="w-full p-3 bg-[#041610] rounded-xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <button 
+                        onclick="saveButtonNames()" 
+                        class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-xl transition shadow text-sm flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span>বাটনের নতুন নামগুলো সেভ করুন</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= TAB 4: NOTICE CONTROL ================= -->
+            <div id="section-notice" class="hidden space-y-4">
+                <div class="royal-card p-5 rounded-3xl border border-amber-500/40 space-y-4">
+                    <div class="flex items-center gap-2 text-amber-300 font-black text-sm">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span>হোমস্ক্রিনের ভাসমান জরুরি নোটিশ পরিচালনা</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3.5 bg-[#041610] rounded-2xl border border-emerald-600/40">
+                        <div>
+                            <span class="text-sm font-bold text-white block">নোটিশ সক্রিয় থাকবে?</span>
+                            <span class="text-[11px] text-emerald-300/70">চালু থাকলে হোমস্ক্রিনে নোটিশটি ভেসে উঠবে</span>
+                        </div>
+                        <input type="checkbox" id="noticeActiveCheck" class="w-6 h-6 accent-amber-400 rounded cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-emerald-200 font-bold block mb-1.5">নোটিশ বার্তা:</label>
+                        <textarea 
+                            id="noticeInputText" 
+                            rows="3" 
+                            placeholder="যেমন: রমজানুল মোবারকের বিশেষ আয়োজন শুরু হয়েছে..." 
+                            class="w-full p-3.5 bg-[#041610] rounded-2xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none"
+                        ></textarea>
+                    </div>
+
+                    <button 
+                        onclick="saveNoticeData()" 
+                        class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-xl transition shadow text-sm flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>নোটিশ আপডেট করুন</span>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= ANSWER MODAL ================= -->
+    <div id="answerModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#03100b]/85 backdrop-blur-md hidden">
+        <div class="royal-card w-full max-w-lg p-6 rounded-3xl border-2 border-amber-500/60 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-emerald-700/40 pb-3">
+                <h4 class="text-base font-black text-amber-300">প্রশ্নের আলেমসুলভ উত্তর প্রদান</h4>
+                <button onclick="closeAnswerModal()" class="text-emerald-400 hover:text-red-400">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="bg-[#041610] p-3.5 rounded-2xl border border-emerald-900/50 space-y-1">
+                <span id="modalQDate" class="text-[10px] text-amber-400 font-bold block"></span>
+                <h5 id="modalQTitle" class="text-sm font-extrabold text-white"></h5>
+                <p id="modalQDesc" class="text-xs text-emerald-200/90 leading-relaxed"></p>
+            </div>
+
+            <div>
+                <label class="text-xs text-amber-300 font-bold block mb-1">কুরআন ও সুন্নাহর আলোকে আপনার উত্তর লিখুন:</label>
+                <textarea 
+                    id="modalAnswerText" 
+                    rows="5" 
+                    placeholder="সম্মানিত প্রশ্নকারী, আপনার প্রশ্নের প্রেক্ষিতে শরীয়তের সমাধান হলো..." 
+                    class="w-full p-3.5 bg-[#041610] rounded-2xl border border-emerald-600/40 text-white text-sm focus:border-amber-400 focus:outline-none"
+                ></textarea>
+            </div>
+
+            <input type="hidden" id="modalQId">
+
+            <div class="flex items-center gap-2 pt-2">
+                <button onclick="closeAnswerModal()" class="flex-1 py-2.5 bg-[#07241a] text-emerald-200 font-bold rounded-xl text-xs hover:bg-[#0c392a] transition">
+                    বাতিল
+                </button>
+                <button onclick="submitAnswerFromModal()" class="flex-1 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black rounded-xl text-xs hover:brightness-110 active:scale-95 transition">
+                    উত্তর প্রকাশ করুন
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ENGINE -->
+    <script>
+        const ADMIN_SECRET = "0987654321";
+        const STORAGE_KEY_AUTH = "islam_bangla_admin_auth";
+        const STORAGE_KEY_QUESTIONS = "user_questions";
+        const STORAGE_KEY_SETTINGS = "islam_bangla_app_settings";
+
+        const defaultButtons = {
+            quran: "কুরআন",
+            hadith: "হাদিস",
+            dua: "দোয়া",
+            amal: "আমল ট্র্যাকার",
+            jiggasa: "দ্বীনি জিজ্ঞাসা",
+            zakat: "যাকাত ক্যালকুলেটর"
+        };
+
+        const defaultAdvice = {
+            text: 'রাসূলুল্লাহ (সাঃ) বলেছেন: "যে ব্যক্তি জ্ঞানের সন্ধানে কোনো পথ অবলম্বন করে, আল্লাহ তা\'আলা তার জন্য জান্নাতের পথ সহজ করে দেন।"',
+            ref: "[সহীহ মুসলিম]"
+        };
+
+        // --- AUTHENTICATION LOGIC ---
+        function checkExistingAuth() {
+            if (sessionStorage.getItem(STORAGE_KEY_AUTH) === "true") {
+                unlockDashboard();
+            }
+        }
+
+        function handleLogin() {
+            const input = document.getElementById("adminPasswordInput");
+            const err = document.getElementById("loginError");
+            if (input.value.trim() === ADMIN_SECRET) {
+                sessionStorage.setItem(STORAGE_KEY_AUTH, "true");
+                err.classList.add("hidden");
+                unlockDashboard();
+                showToast("লগইন সফল হয়েছে!");
+            } else {
+                err.classList.remove("hidden");
+                input.classList.add("border-rose-500");
+                input.focus();
+            }
+        }
+
+        function togglePassVisibility() {
+            const input = document.getElementById("adminPasswordInput");
+            const icon = document.getElementById("passEyeIcon");
+            if (input.type === "password") {
+                input.type = "text";
+                icon.setAttribute("data-lucide", "eye-off");
+            } else {
+                input.type = "password";
+                icon.setAttribute("data-lucide", "eye");
+            }
+            lucide.createIcons();
+        }
+
+        function unlockDashboard() {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("adminDashboard").classList.remove("hidden");
+            loadAllAdminData();
+            lucide.createIcons();
+        }
+
+        function handleLogout() {
+            if (confirm("আপনি কি অ্যাডমিন প্যানেল থেকে লগআউট করতে চান?")) {
+                sessionStorage.removeItem(STORAGE_KEY_AUTH);
+                location.reload();
+            }
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toastMessage").innerText = msg;
+            toast.classList.remove("translate-y-[-150%]", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-[-150%]", "opacity-0");
+            }, 2500);
+        }
+
+        // --- TABS LOGIC ---
+        function switchTab(tabId) {
+            const tabs = ['questions', 'dailyAdvice', 'buttons', 'notice'];
+            tabs.forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tabBtn-${t}`);
+                if (t === tabId) {
+                    sec.classList.remove("hidden");
+                    btn.className = "px-4 py-2 rounded-xl font-black bg-amber-400 text-slate-950 shrink-0 transition";
+                } else {
+                    sec.classList.add("hidden");
+                    btn.className = "px-4 py-2 rounded-xl font-bold bg-[#07241a] text-emerald-200 border border-emerald-600/40 shrink-0 transition";
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // --- DATA LOADING & FIRESTORE CLOUD INTEGRATION ---
+        function loadAllAdminData() {
+            loadQuestionsData();
+            loadSettingsData();
+        }
+
+        // 1. QUESTIONS
+        function getStoredQuestions() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY_QUESTIONS) || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveQuestionsToStore(list) {
+            localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(list));
+            updateQuestionStats(list);
+
+            // Cloud Firestore Background Sync
+            if (window.firebaseDB && window.firestoreTools) {
+                try {
+                    const { doc, setDoc } = window.firestoreTools;
+                    setDoc(doc(window.firebaseDB, "app_data", "questions_sync"), { list: list, updatedAt: new Date().toISOString() });
+                } catch (e) {
+                    console.warn("Firestore Question Sync error:", e);
+                }
+            }
+        }
+
+        function updateQuestionStats(list) {
+            const total = list.length;
+            const answered = list.filter(q => q.status === "উত্তর সম্পন্ন" || q.answer !== "জাযাকাল্লাহু খাইরান। আপনার প্রশ্নটি গ্রহণ করা হয়েছে। আলেম প্যানেল ইনশাআল্লাহ অতিদ্রুত কুরআন ও সুন্নাহর আলোকে এর সঠিক সমাধান এখানে প্রদর্শন করবেন।").length;
+            const pending = total - answered;
+
+            document.getElementById("statTotalQ").innerText = total;
+            document.getElementById("statPendingQ").innerText = pending;
+            document.getElementById("statAnsweredQ").innerText = answered;
+        }
+
+        function loadQuestionsData() {
+            const list = getStoredQuestions();
+            updateQuestionStats(list);
+            renderQuestionsList(list);
+
+            // Try Cloud Firestore Live Sync
+            if (window.firebaseDB && window.firestoreTools) {
+                try {
+                    const { doc, getDoc } = window.firestoreTools;
+                    getDoc(doc(window.firebaseDB, "app_data", "questions_sync")).then(snap => {
+                        if (snap.exists() && snap.data().list) {
+                            const cloudList = snap.data().list;
+                            if (cloudList.length > 0) {
+                                localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(cloudList));
+                                updateQuestionStats(cloudList);
+                                renderQuestionsList(cloudList);
+                            }
+                        }
+                    }).catch(() => {});
+                } catch (e) {}
+            }
+        }
+
+        function renderQuestionsList(list) {
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="royal-card p-8 rounded-3xl text-center border border-emerald-700/50">
+                        <i data-lucide="inbox" class="w-10 h-10 text-emerald-400/60 mx-auto mb-2"></i>
+                        <h4 class="text-base font-bold text-emerald-200">এখনো কোনো প্রশ্ন জমা পড়েনি</h4>
+                        <p class="text-xs text-emerald-400/70 mt-1">ব্যবহারকারীরা দ্বীনি জিজ্ঞাসা সেকশন থেকে প্রশ্ন পাঠালে এখানে সরাসরি প্রদর্শিত হবে।</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            list.forEach(q => {
+                const isAnswered = q.status === "উত্তর সম্পন্ন";
+                const card = document.createElement("div");
+                card.className = "royal-card p-4 sm:p-5 rounded-2xl border border-emerald-600/40 space-y-3";
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 border-b border-emerald-700/40 pb-2.5">
+                        <div>
+                            <span class="text-[10px] font-bold text-emerald-400 block">${q.date || 'তারিখ অপ্রাপ্য'}</span>
+                            <h4 class="text-sm sm:text-base font-extrabold text-amber-300 mt-0.5">${q.title}</h4>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold ${isAnswered ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'} shrink-0">
+                            ${isAnswered ? 'উত্তর সম্পন্ন' : 'অপেক্ষমাণ'}
+                        </span>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-emerald-100 font-medium leading-relaxed">
+                        <span class="text-white font-bold">প্রশ্ন:</span> ${q.desc}
+                    </p>
+
+                    <div class="bg-[#041610] p-3 rounded-xl border border-emerald-900/60 space-y-1">
+                        <span class="text-[11px] font-bold text-amber-400 block">বর্তমান উত্তর:</span>
+                        <p class="text-xs text-emerald-200 leading-relaxed">${q.answer || 'কোনো উত্তর নেই'}</p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-1">
+                        <button onclick="openAnswerModal('${q.id}')" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>${isAnswered ? 'উত্তর এডিট করুন' : 'উত্তর লিখুন'}</span>
+                        </button>
+                        <button onclick="deleteQuestion('${q.id}')" class="p-1.5 bg-red-950/80 hover:bg-red-900 active:scale-95 text-red-300 rounded-xl text-xs border border-red-500/40 transition" title="মুছে ফেলুন">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // --- ANSWER MODAL ACTIONS ---
+        function openAnswerModal(id) {
+            const list = getStoredQuestions();
+            const q = list.find(item => item.id.toString() === id.toString());
+            if (!q) return;
+
+            document.getElementById("modalQId").value = q.id;
+            document.getElementById("modalQDate").innerText = q.date || '';
+            document.getElementById("modalQTitle").innerText = q.title;
+            document.getElementById("modalQDesc").innerText = q.desc;
+            document.getElementById("modalAnswerText").value = q.answer.includes("উত্তর প্রক্রিয়াধীন") ? "" : q.answer;
+
+            document.getElementById("answerModal").classList.remove("hidden");
+            document.getElementById("modalAnswerText").focus();
+            lucide.createIcons();
+        }
+
+        function closeAnswerModal() {
+            document.getElementById("answerModal").classList.add("hidden");
+        }
+
+        function submitAnswerFromModal() {
+            const id = document.getElementById("modalQId").value;
+            const ansText = document.getElementById("modalAnswerText").value.trim();
+
+            if (!ansText) {
+                alert("দয়া করে উত্তরটি লিখুন!");
+                return;
+            }
+
+            const list = getStoredQuestions();
+            const index = list.findIndex(item => item.id.toString() === id.toString());
+            if (index !== -1) {
+                list[index].answer = ansText;
+                list[index].status = "উত্তর সম্পন্ন";
+                list[index].answeredAt = new Date().toLocaleDateString('bn-BD');
+                saveQuestionsToStore(list);
+                renderQuestionsList(list);
+                closeAnswerModal();
+                showToast("উত্তর সফলভাবে সেভ করা হয়েছে!");
+            }
+        }
+
+        function deleteQuestion(id) {
+            if (confirm("আপনি কি নিশ্চিতভাবে এই প্রশ্নটি মুছে ফেলতে চান?")) {
+                let list = getStoredQuestions();
+                list = list.filter(item => item.id.toString() !== id.toString());
+                saveQuestionsToStore(list);
+                renderQuestionsList(list);
+                showToast("প্রশ্নটি মুছে ফেলা হয়েছে।");
+            }
+        }
+
+        // --- SETTINGS (DAILY ADVICE, BUTTON NAMES, NOTICE) ---
+        function getStoredSettings() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS) || "{}");
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveSettingsToStore(settings) {
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+
+            // Cloud Firestore Background Sync
+            if (window.firebaseDB && window.firestoreTools) {
+                try {
+                    const { doc, setDoc } = window.firestoreTools;
+                    setDoc(doc(window.firebaseDB, "app_data", "settings_sync"), { ...settings, updatedAt: new Date().toISOString() });
+                } catch (e) {
+                    console.warn("Firestore Settings Sync error:", e);
+                }
+            }
+        }
+
+        function loadSettingsData() {
+            const settings = getStoredSettings();
+
+            // Advice
+            document.getElementById("adviceInputText").value = settings.dailyAdvice || defaultAdvice.text;
+            document.getElementById("adviceInputRef").value = settings.dailyRef || defaultAdvice.ref;
+
+            // Buttons
+            const btns = settings.buttonNames || defaultButtons;
+            document.getElementById("btnName_quran").value = btns.quran || defaultButtons.quran;
+            document.getElementById("btnName_hadith").value = btns.hadith || defaultButtons.hadith;
+            document.getElementById("btnName_dua").value = btns.dua || defaultButtons.dua;
+            document.getElementById("btnName_amal").value = btns.amal || defaultButtons.amal;
+            document.getElementById("btnName_jiggasa").value = btns.jiggasa || defaultButtons.jiggasa;
+            document.getElementById("btnName_zakat").value = btns.zakat || defaultButtons.zakat;
+
+            // Notice
+            document.getElementById("noticeActiveCheck").checked = settings.noticeActive !== undefined ? settings.noticeActive : true;
+            document.getElementById("noticeInputText").value = settings.noticeText || "ইসলাম বাংলা অ্যাপে আপনাকে স্বাগতম। সকল ফিচার নিয়মিত আপডেট হচ্ছে।";
+
+            // Try Cloud Fetch
+            if (window.firebaseDB && window.firestoreTools) {
+                try {
+                    const { doc, getDoc } = window.firestoreTools;
+                    getDoc(doc(window.firebaseDB, "app_data", "settings_sync")).then(snap => {
+                        if (snap.exists()) {
+                            const cloud = snap.data();
+                            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(cloud));
+                            // refresh inputs with cloud values
+                            if (cloud.dailyAdvice) document.getElementById("adviceInputText").value = cloud.dailyAdvice;
+                            if (cloud.dailyRef) document.getElementById("adviceInputRef").value = cloud.dailyRef;
+                        }
+                    }).catch(() => {});
+                } catch (e) {}
+            }
+        }
+
+        function saveDailyAdvice() {
+            const text = document.getElementById("adviceInputText").value.trim();
+            const ref = document.getElementById("adviceInputRef").value.trim();
+            if (!text) {
+                alert("উপদেশের টেক্সট খালি রাখা যাবে না!");
+                return;
+            }
+            const settings = getStoredSettings();
+            settings.dailyAdvice = text;
+            settings.dailyRef = ref;
+            saveSettingsToStore(settings);
+            showToast("আজকের উপদেশ সফলভাবে আপডেট হয়েছে!");
+        }
+
+        function saveButtonNames() {
+            const settings = getStoredSettings();
+            settings.buttonNames = {
+                quran: document.getElementById("btnName_quran").value.trim() || defaultButtons.quran,
+                hadith: document.getElementById("btnName_hadith").value.trim() || defaultButtons.hadith,
+                dua: document.getElementById("btnName_dua").value.trim() || defaultButtons.dua,
+                amal: document.getElementById("btnName_amal").value.trim() || defaultButtons.amal,
+                jiggasa: document.getElementById("btnName_jiggasa").value.trim() || defaultButtons.jiggasa,
+                zakat: document.getElementById("btnName_zakat").value.trim() || defaultButtons.zakat
+            };
+            saveSettingsToStore(settings);
+            showToast("বাটনের নামগুলো সফলভাবে সেভ হয়েছে!");
+        }
+
+        function resetDefaultButtonNames() {
+            if (confirm("আপনি কি সব বাটনের নাম পূর্বের ডিফল্ট নামে ফিরিয়ে নিতে চান?")) {
+                document.getElementById("btnName_quran").value = defaultButtons.quran;
+                document.getElementById("btnName_hadith").value = defaultButtons.hadith;
+                document.getElementById("btnName_dua").value = defaultButtons.dua;
+                document.getElementById("btnName_amal").value = defaultButtons.amal;
+                document.getElementById("btnName_jiggasa").value = defaultButtons.jiggasa;
+                document.getElementById("btnName_zakat").value = defaultButtons.zakat;
+                saveButtonNames();
+            }
+        }
+
+        function saveNoticeData() {
+            const active = document.getElementById("noticeActiveCheck").checked;
+            const text = document.getElementById("noticeInputText").value.trim();
+            const settings = getStoredSettings();
+            settings.noticeActive = active;
+            settings.noticeText = text;
+            saveSettingsToStore(settings);
+            showToast("নোটিশ তথ্য সফলভাবে আপডেট হয়েছে!");
+        }
+
+        // INITIAL CHECK
+        window.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            checkExistingAuth();
+        });
+    </script>
+</body>
+</html>
